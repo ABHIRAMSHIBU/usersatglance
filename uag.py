@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import subprocess as sp
 import os
 from pprint import pprint
