@@ -1,6 +1,7 @@
 import sys
 import pickle
 from pprint import pprint
+count=0
 if(len(sys.argv)>1):
     if(sys.argv[1]=="--help" or sys.argv[1]=="-h"):
         print("Example Usage")
@@ -14,6 +15,7 @@ if(len(sys.argv)>1):
             try:
                 data=pickle.load(f)
                 pprint(data)
+                count+=1
                 if(f.tell()==end):
                     break
             except:
@@ -22,3 +24,5 @@ if(len(sys.argv)>1):
             
 else:
     print(sys.argv[0]+" --help")
+
+print("The count was",count)
