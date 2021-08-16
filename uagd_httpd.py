@@ -88,7 +88,7 @@ def provider(dir,param,pp):
                 current_user_id = user_id[i]
                 row[current_user_id] = float(body[i][param])
             row.insert(0,ts)
-            dataMatrix.append(row)
+            dataMatrix.insert(0,row)
             count+=1
     #We are left with count no data
     dataMatrix = np.array(dataMatrix,dtype=float)[:,:len(user_id)+1]
@@ -109,16 +109,20 @@ if side_param == "Individual":
     while(True):
         if counter%30 == 0:
             f = provider("/var/log/uag/", param, past_points)
+            actual_points = f.shape[0]
             f["time"] = f.index
             f["time"] = f["time"].apply(ts_to_time)
             f = f.set_index(["time"])
             fig = px.line(f)
-            fig.layout = dict(title=f"{param} usage for {past_points} points", xaxis = dict(type="category", categoryorder='category ascending'))
+            fig.layout = dict(title=f"{param} usage for {actual_points} points", xaxis = dict(type="category", categoryorder='category ascending'))
             fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightYellow')
             fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightYellow')    
             # fig.update_layout(width=1700,height=700)
             chart.plotly_chart(fig,use_container_width=True)#,width=1100,height=900)
             counter = 0
+
+            st.subheader("Hogger Board")
+            st.write(pd.DataFrame(f.mean(),columns=[f"{param} usage"]).sort_values(by=f"{param} usage",ascending=False))
         counter+=1
         chart1 = st.empty()
         if not auto_update:
@@ -129,11 +133,12 @@ elif side_param == "All":
     past_points = st.select_slider("History Range",[i for i in range(60,720*2)])
     for i in all_param:
         f = provider("/var/log/uag/", i, past_points)
+        actual_points = f.shape[0]
         f["time"] = f.index
         f["time"] = f["time"].apply(ts_to_time)
         f = f.set_index(["time"])
         fig = px.line(f)
-        fig.layout = dict(title=f"{i} usage for {past_points} points", xaxis = dict(type="category", categoryorder='category ascending'))
+        fig.layout = dict(title=f"{i} usage for {actual_points} points", xaxis = dict(type="category", categoryorder='category ascending'))
         fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightYellow')
         fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightYellow')
         # fig.update_layout(width=1700,height=700)
