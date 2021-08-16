@@ -5,8 +5,8 @@ import time
 
 
 ## Limits Configuration
-SAMPLE_TIME_PERIOD = 30 # In seconds
-MAX_SAMPLES_PER_FILE = 720
+SAMPLE_TIME_PERIOD = 120 # In seconds
+MAX_SAMPLES_PER_FILE = 1440
 ## END Limits
 
 
@@ -65,7 +65,7 @@ if count >= MAX_SAMPLES_PER_FILE:
     getNewLogFile()
 try:
     while True:
-        uag_out = os.popen("/usr/bin/env python3 uag.py -j").read() 
+        uag_out = os.popen("uag -j").read() 
         timestamp = str(int(time.time()))
         uag_out = json.loads(uag_out)
         logObject = {"TimeStamp":timestamp,"log":uag_out}
