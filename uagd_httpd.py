@@ -49,6 +49,7 @@ def provider(dir,param,pp):
     eof=fileCurrent.seek(0,2)
     fileCurrent.seek(0,0)
     count=0
+    insertIndex=0
     while(True):
         if(fileCurrent.tell()>=eof):
             break
@@ -88,11 +89,14 @@ def provider(dir,param,pp):
                 current_user_id = user_id[i]
                 row[current_user_id] = float(body[i][param])
             row.insert(0,ts)
-            dataMatrix.insert(0,row)
+            dataMatrix.insert(insertIndex,row)
+            insertIndex+=1
             count+=1
     #We are left with count no data
     dataMatrix = np.array(dataMatrix,dtype=float)[:,:len(user_id)+1]
-    return pd.DataFrame(dataMatrix,columns = ["time"]+list(user_id.keys())).set_index(["time"]).iloc[-pp:,:]
+    ans = pd.DataFrame(dataMatrix,columns = ["time"]+list(user_id.keys())).set_index(["time"]).iloc[-pp:,:]
+    del dataMatrix
+    return ans
 
 def ts_to_time(ts):
     return str(datetime.fromtimestamp(int(ts)))
@@ -106,6 +110,8 @@ if side_param == "Individual":
     chart = st.empty()
     chart1 = st.empty()
     counter = 0
+    hogger_title = st.empty()
+    hogger_data = st.empty()
     while(True):
         if counter%30 == 0:
             f = provider("/var/log/uag/", param, past_points)
@@ -121,8 +127,8 @@ if side_param == "Individual":
             chart.plotly_chart(fig,use_container_width=True)#,width=1100,height=900)
             counter = 0
 
-            st.subheader("Hogger Board")
-            st.write(pd.DataFrame(f.mean(),columns=[f"{param} usage"]).sort_values(by=f"{param} usage",ascending=False))
+            hogger_title.subheader("Hogger Board")
+            hogger_data.write(pd.DataFrame(f.mean(),columns=[f"{param} usage"]).sort_values(by=f"{param} usage",ascending=False))
         counter+=1
         chart1 = st.empty()
         if not auto_update:
