@@ -5,8 +5,8 @@ After = NetworkManager-wait-online.service network.target network-online.target 
 [Service]
 User = uag
 Group = uag
-ExecStart = streamlit run /usr/bin/uagd_httpd.py
-Restart = on-abort
+ExecStart = timeout 1d streamlit run /usr/bin/uagd_httpd.py
+Restart = always
 StartLimitInterval = 60
 StartLimitBurst = 10
 Environment=TERM=linux
