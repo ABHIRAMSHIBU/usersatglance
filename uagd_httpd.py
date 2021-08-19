@@ -9,10 +9,11 @@ import plotly.express as px
 import time,os
 import sys
 import linecache
+import gc
 
 st.set_page_config(page_title="User at Glance", page_icon=None, layout='wide', initial_sidebar_state='collapsed')
 st.title("User at Glance")
-
+gc.collect()
 def getUserCount():
     return int(os.popen("cat /etc/passwd | wc -l").read().strip())
 
@@ -94,6 +95,8 @@ def provider(dir,param,pp):
             count+=1
     #We are left with count no data
     dataMatrix = np.array(dataMatrix,dtype=float)[:,:len(user_id)+1]
+    if param in ['vmem','rmem']:
+        dataMatrix[:,1:] = dataMatrix[:,1:]/(1024*1024)
     ans = pd.DataFrame(dataMatrix,columns = ["time"]+list(user_id.keys())).set_index(["time"]).iloc[-pp:,:]
     del dataMatrix
     return ans
@@ -112,6 +115,16 @@ if side_param == "Individual":
     counter = 0
     hogger_title = st.empty()
     hogger_data = st.empty()
+    if param == "cpu":
+        Y_TITLE = "CPU use (%)"
+    elif param == "vmem":
+        Y_TITLE = "Virtual Memory use (GB)"
+    elif param == "rmem":
+        Y_TITLE = "Residential Memory use (GB)"
+    elif param == "pmem":
+        Y_TITLE = "Percentage Memory use (%)"
+    elif param == "tasks":
+        Y_TITLE = "Tasks (Thread)"
     while(True):
         if counter%30 == 0:
             f = provider("/var/log/uag/", param, past_points)
@@ -120,7 +133,7 @@ if side_param == "Individual":
             f["time"] = f["time"].apply(ts_to_time)
             f = f.set_index(["time"])
             fig = px.line(f)
-            fig.layout = dict(title=f"{param} usage for {actual_points} points", xaxis = dict(type="category", categoryorder='category ascending'))
+            fig.layout = dict(title=f"{param} usage for {actual_points} points", xaxis = dict(type="category", categoryorder='category ascending', title="Time"), yaxis = dict(title=Y_TITLE))
             fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightYellow')
             fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightYellow')    
             # fig.update_layout(width=1700,height=700)
@@ -138,13 +151,23 @@ if side_param == "Individual":
 elif side_param == "All":
     past_points = st.select_slider("History Range",[i for i in range(60,720*2)])
     for i in all_param:
+        if i == "cpu":
+            Y_TITLE = "CPU use (%)"
+        elif i == "vmem":
+            Y_TITLE = "Virtual Memory use (GB)"
+        elif i == "rmem":
+            Y_TITLE = "Residential Memory use (GB)"
+        elif i == "pmem":
+            Y_TITLE = "Percentage Memory use (%)"
+        elif i == "tasks":
+            Y_TITLE = "Tasks (Thread)"
         f = provider("/var/log/uag/", i, past_points)
         actual_points = f.shape[0]
         f["time"] = f.index
         f["time"] = f["time"].apply(ts_to_time)
         f = f.set_index(["time"])
-        fig = px.line(f)
-        fig.layout = dict(title=f"{i} usage for {actual_points} points", xaxis = dict(type="category", categoryorder='category ascending'))
+        fig = px.line(f,)
+        fig.layout = dict(title=f"{i} usage for {actual_points} points", xaxis = dict(type="category", categoryorder='category ascending', title="Time"), yaxis = dict(title=Y_TITLE))
         fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightYellow')
         fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightYellow')
         # fig.update_layout(width=1700,height=700)
